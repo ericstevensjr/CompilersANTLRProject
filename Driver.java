@@ -1,8 +1,15 @@
 // Import libraries
 import org.antlr.v4.runtime.*;
-import java.sql.Array;
-import java.util.*;
+import org.antlr.v4.runtime.tree.*;
+import org.antlr.v4.runtime.CharStream;
+import java.util.Collections;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.List;
 import java.io.*;
+import java.util.*;
+import java.util.ArrayList;
+import java.util.Stack;
 
 // Global class for symbol table elements
 class SymbolTableElement {
@@ -54,7 +61,7 @@ public class Driver {
         // Parsing tokens to create parse tree
         LittleParser parser = new LittleParser(tokens);
         parser.removeErrorListeners();
-        parser.addErrorListeners(new VerboseListener());
+        parser.addErrorListener(new VerboseListener());
         ParseTree parseTree = parser.program();
 
         // Creating walker to walk the parse tree nodes
@@ -69,9 +76,8 @@ public class Driver {
     // Extending BaseErrorListener into a more verbose listener for our program
     public static class VerboseListener extends BaseErrorListener {
         @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLIne,
-                                String msg, RecognitionAcceptance e) {
-            List<String> stack = ((Parser) recognizer).getRuleInvocatoinStack();
+        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLIne, String msg, RecognitionException e) {
+            List<String> stack = ((Parser) recognizer).getRuleInvocationStack();
             Collections.reverse(stack);
         }
     }
@@ -96,7 +102,7 @@ public class Driver {
 
         // Overriding the standard parser context methods in order to create an AST
         // Enter program context
-        @Override public void enterProgram(LitteParser.ProgramContext ctx) {
+        @Override public void enterProgram(LittleParser.ProgramContext ctx) {
             symbolScope.push("GLOBAL");
             symbolTable = new ArrayList<>();
             symbolTableIndex = 0;
@@ -136,7 +142,7 @@ public class Driver {
             if (ctx.getText().startsWith("INT")) {
                 stringName = ctx.getText().substring(3).replace(")", "").split(",INT");
                 type = "INT";
-            } else if (ctx.getText().startswith("FLOAT")) {
+            } else if (ctx.getText().startsWith("FLOAT")) {
                 stringName = ctx.getText().substring(5).replace(")", "").split(",FLOAT");
                 type = "FLOAT";
             }
@@ -185,7 +191,7 @@ public class Driver {
         }
 
         // Enter else control statement context
-        @Override public void enterElse_part(LitteParser.Else_partContext ctx) {
+        @Override public void enterElse_part(LittleParser.Else_partContext ctx) {
             if(elseStatement) {
                 stackIndex++;
                 symbolScope.push("BLOCK " + statementBlockCount);
@@ -260,12 +266,12 @@ public class Driver {
                         if(Objects.equals(element.getValue().get(i).getType(), "STRING")) {
                             System.out.println("name " + element.getValue().get(i).getName() +
                                     " type " + element.getValue().get(i).getType() +
-                                    " value " + element.getValue().get(i). getValue());
+                                    " value " + element.getValue().get(i). getValue() + "\n");
 
                         }
                         else {
                             System.out.print("name " + element.getValue().get(i).getName() +
-                                    " type " + element.getValue().get(i).getType());
+                                    " type " + element.getValue().get(i).getType() + "\n");
                         }
                     }
                     System.out.println();
